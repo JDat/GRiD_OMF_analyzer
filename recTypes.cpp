@@ -94,49 +94,127 @@ uint8_t parserRHEADR(uint16_t len) {
 };
 
 uint8_t parserREGINT(uint16_t len) {
+    uint8_t data;
+
+    uint8_t regPair;    
     uint8_t regType;
-    regType  = fileReadByte();
-    printf("Regyster type (RAW):\t0x%02X\n", regType);
+    uint16_t groupIndex;
+    uint16_t segmentIndex;
+    uint16_t frameIndex;
+    uint16_t registerOffset;
 
-    uint8_t regPair;
-    regPair = (regType & 0b11000000) >> 6;
-    bool regTypeLogical;
-    regTypeLogical = (regType & 0b00000001);
+    uint16_t entryCount;
+    
+    while(len) {
+        printf("Entry:\t%u\t0x%04X\n", entryCount, entryCount);
+        entryCount++;
+        regType  = fileReadByte();
+        len--; 
+        
+        printf("Regyster type (RAW):\t0x%02X\n", regType);
 
-    printf("Init registers: (type=%u)\t", regPair);
-    switch (regPair) {
-        case 0:
-            printf("CS:IP\n");
-            break;
-        case 1:
-            printf("SS:SP\n");
-            break;
-        case 2:
-            printf("DS\n");
-            break;
-        case 3:
-            printf("ES\n");
-            break;
-        default:
-            printf("Error: Other/Unknown\n");
-            break;
 
+        regPair = (regType & 0b11000000) >> 6;
+        bool regTypeLogical;
+        regTypeLogical = (regType & 0b00000001);
+
+        printf("Init registers: (type=%u)\t", regPair);
+        switch (regPair) {
+            case 0:
+                printf("CS:IP\n");
+                break;
+            case 1:
+                printf("SS:SP\n");
+                break;
+            case 2:
+                printf("DS\n");
+                break;
+            case 3:
+                printf("ES\n");
+                break;
+            default:
+                printf("Error: Other/Unknown\n");
+                break;
+
+        }
+
+        if ( regTypeLogical == 1 ) {
+            printf("Init registers as logical with fixup (L=1)\n");
+            printf("Warning: Fixup not implemented yet. Need more codding. Dumping remaining data: ");
+            while(len) {
+                uint8_t data;
+                data = fileReadByte();
+                len--;
+                printf("%02X ", data);
+            }
+        } else {
+            printf("Init registers as base:offset pair (L=0)\n");
+                    
+            data = fileReadByte();
+            len--;
+            if (data > 127) {
+                groupIndex = data & 0x7F << 8;
+                data = fileReadByte();
+                len--;
+                groupIndex += data;
+            } else {
+                groupIndex = data;
+            }
+            
+            data = fileReadByte();
+            len--;
+            if (data > 127) {
+                segmentIndex = data & 0x7F << 8;
+                data = fileReadByte();
+                len--;
+                segmentIndex += data;
+            } else {
+                segmentIndex = data;
+            }
+            
+            printf("Group Index:\t%u\t0x%04X\n", groupIndex, groupIndex);
+            printf("Segment Index:\t%u\t0x%04X\n", segmentIndex, segmentIndex);
+            
+            if (groupIndex) {
+                if (segmentIndex) {
+                    //noframeIndex, normal
+                } else {
+                    printf("Warning: Segment Index=0, Must be nonZero!\n");
+                }
+            } else {    // groupIndex = 0
+                if (segmentIndex) {
+                    //noframeIndex, normal
+                } else {
+                    data = fileReadByte();
+                    len--;
+                    if (data > 127) {
+                        frameIndex = data & 0x7F << 8;
+                        data = fileReadByte();
+                        len--;
+                        frameIndex += data;
+                    } else {
+                        frameIndex = data;
+                    }
+                    printf("Frame Index:\t%u\t0x%04X\n", frameIndex, frameIndex);
+                }
+            }
+            
+            if (regPair <= 1) {
+                registerOffset = fileReadWord();
+                len -= 2;
+                if (segmentIndex) {
+                    printf("Register Offset Relative To Segment Index:\t%u\t0x%04X\n", segmentIndex, segmentIndex);
+                } else {
+                    printf("Register Offset Relative To Frame Index:\t%u\t0x%04X\n", frameIndex, frameIndex);
+                }
+                printf("Register Offset:\t%u\t0x%04X\n", registerOffset, registerOffset);
+            }
+        
+        }
     }
-
-    if ( regTypeLogical == 1 ) {
-        printf("Init registers as logical with fixup (L=1)\n");
-    } else {
-        printf("Init registers as base:offset pair (L=0)\n");
-    }
-
-    printf("Data:\t");
-    for (uint16_t i = 0; i < len - 1; i++) {
-        uint8_t data;
-        data = fileReadByte();
-        printf("%02X ", data);
-    }
+    
     printf("\n");
-    printf("Warning: partial parsing. Need more codding.\n");
+    printf("Total entries:\t%u\t0x%04X\n", entryCount, entryCount);
     return 0;
 }
 
@@ -285,7 +363,8 @@ uint8_t parserCOMENT(uint16_t len) {
         
         if (data > 1 && printCount == 0) {
             printCount = data + 1 ;
-            printf("\nASCII data %u chars len:  ", data);
+            //printf("\nASCII data %u chars len:  ", data);
+            printf("\nASCII data: ");
         }
 
         if (printCount > 0 ) {

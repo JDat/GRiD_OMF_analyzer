@@ -17,12 +17,12 @@
     #define LHEADR  0x82        // * used, need some fixing
     #define PEDATA  0x84        // used
     #define PIDATA  0x86        // used
-    #define COMENT  0x88        // * not used, present in font file
+    #define COMENT  0x88        // ** not used, present in some files, need some fixing
     #define MODEND  0x8a        // * used, Partial implementation, need more coding
 
     #define EXTDEF  0x8c
     #define TYPDEF  0x8e        // * not used, present in font file
-    #define PUBDEF  0x90        // not used, present in font file
+    #define PUBDEF  0x90        // not used, present in some files
     #define LOCSYM  0x92
     #define LINNUM  0x94
     #define LNAMES  0x96        // * not used, need some fixing
