@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
             //printf("End of file. Maybe something broken in OMF records\n");
             return 0;
         }
-        printf("Offset:\t0x%05X\n", offset);
+        printf("\nOffset:\t0x%05X\n", offset);
         printf("Type:\t0x%02X\n", recType);
 
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         if (xSumRead == xSum) {
             printf(" (OK)\n\n");
         } else {
-            printf(" (Wrong)! Calculated: 0x%02X\n\n", xSum);
+            printf("Error: Wrong Checksum! Calculated: 0x%02X\n\n", xSum);
         }
     }
 
