@@ -52,6 +52,6 @@ bool fileIsEOF() {
     return feof(ptrFile);
 }
 
-void fileColse() {
+void fileClose() {
     fclose(ptrFile);
 }

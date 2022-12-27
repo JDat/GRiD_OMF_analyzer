@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
         recType = fileReadByte();
         if ( fileIsEOF() ) {
             //printf("End of file. Maybe something broken in OMF records\n");
+            fileClose();
             return 0;
         }
         printf("\nOffset:\t0x%05X\n", offset);
@@ -49,7 +50,9 @@ int main(int argc, char *argv[])
         if (xSumRead == xSum) {
             printf(" (OK)\n\n");
         } else {
-            printf("Error: Wrong Checksum! Calculated: 0x%02X\n\n", xSum);
+            printf("\nError: Wrong Checksum! Calculated: 0x%02X\n", xSum);
+            fileClose();
+            return -1;
         }
     }
 

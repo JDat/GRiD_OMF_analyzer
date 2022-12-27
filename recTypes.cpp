@@ -78,6 +78,9 @@ uint8_t parserRHEADR(uint16_t len) {
     uint32_t ovlOffset = fileReadLong();
     printf("Overlay Offset:\t%u\t0x%04X\n", ovlOffset, ovlOffset);
 
+    if (ovlCount == 0 && ovlOffset != 0 ) {
+        printf("Warning: When Overlay record count = 0, Overlay Offset must be = 0\n");
+    }
     uint32_t staticSize = fileReadLong();
     printf("Static Size:\t%u\t0x%04X\n", staticSize, staticSize);
 
@@ -106,6 +109,7 @@ uint8_t parserREGINT(uint16_t len) {
     uint16_t entryCount;
     
     while(len) {
+        printf("\n");
         printf("Entry:\t%u\t0x%04X\n", entryCount, entryCount);
         entryCount++;
         regType  = fileReadByte();
@@ -364,7 +368,7 @@ uint8_t parserCOMENT(uint16_t len) {
         if (data > 1 && printCount == 0) {
             printCount = data + 1 ;
             //printf("\nASCII data %u chars len:  ", data);
-            printf("\nASCII data: ");
+            printf("ASCII data: ");
         }
 
         if (printCount > 0 ) {
@@ -575,13 +579,13 @@ uint8_t parserTYPDEF(uint16_t len) {
         len--;
         switch (data) {
             case 0 ... 127:
-                printf("Empty leaf %u\n", data);
+                printf("Empty leaf:\t%u\n", data);
                 break;
             case 128:
-                printf("NULL leaf %u\n", data);
+                printf("NULL leaf:\t%u\n", data);
                 break;
             default:
-                printf("Warning: leaf parsing not implemented!. RAW value: 0x%02X\n", data);
+                printf("Warning: leaf parsing not implemented!. RAW value:\t0x%02X\n", data);
                 break;
         }
     }
@@ -627,6 +631,8 @@ uint8_t parserGRPDEF(uint16_t len) {
     uint8_t groupComponentDescriptor;
     uint16_t segmentIndex;
     
+    uint16_t entryCount = 0;
+    
     data = fileReadByte();
     len--;
     if (data > 127) {
@@ -642,7 +648,8 @@ uint8_t parserGRPDEF(uint16_t len) {
     while (len) {
         groupComponentDescriptor = fileReadByte();
         len--;
-        printf("Entry:\n");
+        printf("Entry: %u\n", entryCount+1);
+        entryCount++;
         switch (groupComponentDescriptor) {
             case groupSI:
                 data = fileReadByte();
@@ -714,6 +721,7 @@ uint8_t parserGRPDEF(uint16_t len) {
                 break;
         }
     }
+    printf("Total Entries: %u\n", entryCount);
     return 0;
 }
 
@@ -787,5 +795,138 @@ uint8_t parserREDATA(uint16_t len) {
     }
     printf("\n");
     
+    return 0;
+}
+
+uint8_t parserEXTDEF(uint16_t len) {
+    uint16_t i = 0;
+    uint8_t data;
+    uint8_t strLen = 0;
+    uint8_t entryCount = 0;
+    uint16_t typeIndex;
+    
+    //char tmpStr[40];
+    
+    while (i < len) {
+        i++;
+        data = fileReadByte();
+        printf("Index: %u:\t", entryCount);
+        entryCount++;
+        
+        if (data > 0) {
+            strLen = data;
+        } else {
+            printf("NULL entry");
+        }
+        
+        while (strLen) {
+            strLen--;
+            i++;
+            data = fileReadByte();
+            printf("%c", data);
+        }
+        printf("\n");
+        typeIndex = fileReadByte();
+        printf("Type index: 0x%02X\n", typeIndex);
+        i++;
+        //printf("tmpStr: %s\n", tmpStr);
+        
+    }
+    
+    printf("Entry count: %u\n", entryCount);
+    return 0;
+}
+
+uint8_t parserPUBDEF(uint16_t len) {
+    uint8_t data;
+    uint8_t strLen;
+    uint8_t printCount = 0;
+    
+    uint16_t groupIndex;
+    //uint8_t groupComponentDescriptor;
+    uint16_t segmentIndex;
+    uint16_t offset;
+    
+    uint16_t entryCount = 0;
+    
+    data = fileReadByte();
+    len--;
+    if (data > 127) {
+        groupIndex = data & 0x7F << 8;
+        data = fileReadByte();
+        len--;
+        groupIndex += data;
+    } else {
+        groupIndex = data;
+    }
+    printf("Group Index:\t%u\t0x%04X\n", groupIndex, groupIndex);
+    
+    data = fileReadByte();
+    len--;
+    if (data > 127) {
+        segmentIndex = data & 0x7F << 8;
+        data = fileReadByte();
+        len--;
+        segmentIndex += data;
+    } else {
+        segmentIndex = data;
+    }
+    printf("Segment Index:\t0x%04X\n", segmentIndex);
+    
+    while (len) {
+        entryCount++;
+        strLen = fileReadByte();
+        len--;
+        
+        for (uint8_t i = 0; i < (strLen); i++) {
+            data = fileReadByte();
+            len--;
+            if (data > 1 && printCount == 0) {
+                printCount = data + 1 ;
+                //printf("\nASCII data %u chars len:  ", data);
+                printf("\nEntry:\t%u:\t", entryCount);
+            }
+
+            if (printCount > 0 ) {
+                printf("%c", data);
+                printCount--;
+            } else {
+                printf("%02X ", data);
+            }
+        }
+        printCount = 0;
+        printf("\n");
+        offset = fileReadWord();
+        len -= 2;
+        printf("Offset:\t%u\n", offset);
+        
+        data = fileReadByte();
+        len--;
+        printf("Type:\t");
+        switch (data) {
+            case 0 ... 127:
+                printf("Empty leaf:\t%u\n", data);
+                break;
+            case 128:
+                printf("NULL leaf:\t%u\n", data);
+                break;
+            default:
+                printf("Warning: leaf parsing not implemented!. RAW value:\t0x%02X\n", data);
+                break;
+        }
+    
+    }
+    printf("\nTotal entries\t%u\n", entryCount);
+    
+    /*
+    printf("Data:\t");
+    while (len) {
+        uint8_t data;
+        data = fileReadByte();
+        len--;
+        printf("%02X ", data);
+    }
+    */
+    printf("\n");
     return 0;
 }

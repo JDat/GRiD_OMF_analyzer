@@ -13,26 +13,26 @@
     #define BLKEND  0x7c
     #define DEBSYM  0x7e
 
-    #define THEADR  0x80        // * used, need some fixing
-    #define LHEADR  0x82        // * used, need some fixing
+    #define THEADR  0x80        // ** used, need some fixing
+    #define LHEADR  0x82        // ** used, need some fixing
     #define PEDATA  0x84        // used
     #define PIDATA  0x86        // used
     #define COMENT  0x88        // ** not used, present in some files, need some fixing
-    #define MODEND  0x8a        // * used, Partial implementation, need more coding
+    #define MODEND  0x8a        // ** used, Partial implementation, need more coding
 
-    #define EXTDEF  0x8c
+    #define EXTDEF  0x8c        // * not used, present in some files
     #define TYPDEF  0x8e        // * not used, present in font file
-    #define PUBDEF  0x90        // not used, present in some files
+    #define PUBDEF  0x90        // ** not used, present in some files, Partial implementation, need more coding
     #define LOCSYM  0x92
     #define LINNUM  0x94
-    #define LNAMES  0x96        // * not used, need some fixing
+    #define LNAMES  0x96        // ** not used, need some fixing
 
     #define SEGDEF  0x98        // * used, Partial implementation
     #define GRPDEF  0x9a        // * used, Partial implementation, need more coding
     #define FIXUPP  0x9c        // used
 
     #define R_NONE  0x9e
-    #define LEDATA  0xa0        // * not used of executble. Used in font file for data
+    #define LEDATA  0xa0        // * not used in executble. Used in font file for data
     #define LIDATA  0xa2
     #define LIBHED  0xa4
     #define LIBNAM  0xa6
@@ -58,6 +58,8 @@
     uint8_t parserLEDATA(uint16_t len);
     uint8_t parserGRPDEF(uint16_t len);
     uint8_t parserREDATA(uint16_t len);
+    uint8_t parserEXTDEF(uint16_t len);
+    uint8_t parserPUBDEF(uint16_t len);
 
     struct recordType {
         uint8_t recType;
@@ -78,7 +80,9 @@
         {TYPDEF,        parserTYPDEF,    "Type Definition Record"},
         {LEDATA,        parserLEDATA,    "Logical Enumerated Data Record"},
         {GRPDEF,        parserGRPDEF,    "Group Definition Record"},
-        {REDATA,        parserREDATA,    "Relocatable Enumerated Data Record"}
+        {REDATA,        parserREDATA,    "Relocatable Enumerated Data Record"},
+        {EXTDEF,        parserEXTDEF,    "External Names Definition Record"},
+        {PUBDEF,        parserPUBDEF,    "Public Names Definition Record"}
     };
     
     // Group component descriptors
