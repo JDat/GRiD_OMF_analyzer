@@ -428,7 +428,7 @@ uint8_t parserSEGDEF(uint16_t len) {
     aligment = (aligment & 0b11100000) >> 5;
 
     printf("Aligment: %u\nType: ", aligment);
-        switch (aligment) {
+    switch (aligment) {
         case 0:
             printf("SEGDEF describes an absolute LSEG\n");
             break;
@@ -551,6 +551,7 @@ uint8_t parserSEGDEF(uint16_t len) {
             printf("Error: Other/Unknown Aligment:\t%u\n", aligment);
             break;
     }
+    
     printf("Combination: %u\n", combination);
     if (flagBig) {
         printf("Flag: BIG. Segment length is 65536.\n");
@@ -566,6 +567,7 @@ uint8_t parserSEGDEF(uint16_t len) {
         printf("Overlay Name Index:\t %u\t0x%04X\n", overlayNameIndex, overlayNameIndex);
 
     }
+    
     if (aligment == 5 ) {
         printf("LTL Data (RAW): 0x%02X\n", ltlData);
         if (flagGroup) {
@@ -933,11 +935,12 @@ uint8_t parserEXTDEF(uint16_t len) {
 uint8_t parserPUBDEF(uint16_t len) {
     uint8_t data;
     uint8_t strLen;
-    uint8_t printCount = 0;
+    //uint8_t printCount = 0;
     
     uint16_t groupIndex;
     //uint8_t groupComponentDescriptor;
     uint16_t segmentIndex;
+    uint16_t frameNumber;
     uint16_t offset;
     
     uint16_t entryCount = 0;
@@ -966,28 +969,24 @@ uint8_t parserPUBDEF(uint16_t len) {
     }
     printf("Segment Index:\t0x%04X\n", segmentIndex);
     
+    if (groupIndex == 0 && segmentIndex == 0 ) {
+        frameNumber = fileReadWord();
+        len -=2;
+        printf("Frame Number:\t0x%04X\n", frameNumber);
+    }
+    
     while (len) {
         entryCount++;
         strLen = fileReadByte();
         len--;
         
+        printf("\nEntry:\t%u:\t", entryCount);
+        
         for (uint8_t i = 0; i < (strLen); i++) {
             data = fileReadByte();
             len--;
-            if (data > 1 && printCount == 0) {
-                printCount = data + 1 ;
-                //printf("\nASCII data %u chars len:  ", data);
-                printf("\nEntry:\t%u:\t", entryCount);
-            }
-
-            if (printCount > 0 ) {
-                printf("%c", data);
-                printCount--;
-            } else {
-                printf("%02X ", data);
-            }
+            printf("%c", data);
         }
-        printCount = 0;
         printf("\n");
         offset = fileReadWord();
         len -= 2;
@@ -1122,7 +1121,7 @@ uint8_t parserFIXUPP(uint16_t len) {
             } else {
                 printf("Flag: p: is clear.\tTarget is specified in secondary way\n");
             }
-            printf("targt:\t%u\n", targt);
+            printf("Target:\t%u\n", targt);
             
             if (t) {
                 thred = targt;
@@ -1283,5 +1282,58 @@ uint8_t parserLIBNAM(uint16_t len) {
     }
     
     printf("Entry count: %u\n", entryCount);
+    return 0;
+}
+
+uint8_t parserLIBLOC(uint16_t len) {
+    uint16_t blockNumber;
+    uint16_t byteNumber;
+    uint16_t entryCount = 0;
+    while (len) {
+        blockNumber = fileReadWord();
+        byteNumber = fileReadWord();
+        len -= 4;
+        entryCount ++;
+        printf("Entry: %u:\t", entryCount);
+        printf("Block Number: %u\t0x%04X\t\t", blockNumber, blockNumber);
+        printf("Byte Number: %u\t0x%04X\n", byteNumber, byteNumber);
+    }
+    printf("Entry count: %u\n", entryCount);
+    return 0;
+}
+
+uint8_t parserLIBDIC(uint16_t len) {
+    uint16_t i = 0;
+    uint8_t data;
+    uint8_t strLen = 0;
+    uint8_t entryCount = 0;
+    
+    //char tmpStr[40];
+    
+    while (i < len) {
+        i++;
+        data = fileReadByte();
+        printf("Index: %u:\t", entryCount);
+        entryCount++;
+        
+        if (data > 0) {
+            strLen = data;
+        } else {
+            printf("NULL entry");
+        }
+        
+        while (strLen) {
+            strLen--;
+            i++;
+            data = fileReadByte();
+            printf("%c", data);
+        }
+        printf("\n");
+        //printf("tmpStr: %s\n", tmpStr);
+        
+    }
+    
+    printf("Entry count: %u\n", entryCount);
+    
     return 0;
 }

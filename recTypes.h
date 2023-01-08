@@ -27,8 +27,8 @@
     #define LINNUM  0x94
     #define LNAMES  0x96        // ** not used, need some fixing
 
-    #define SEGDEF  0x98        // * used, Partial implementation
-    #define GRPDEF  0x9a        // * used, Partial implementation, need more coding
+    #define SEGDEF  0x98        // ** used, Partial implementation
+    #define GRPDEF  0x9a        // ** used, Partial implementation, need more coding
     #define FIXUPP  0x9c        // ** used, Partial implementation, need more coding
 
     #define R_NONE  0x9e
@@ -36,10 +36,11 @@
     #define LIDATA  0xa2
     #define LIBHED  0xa4        // * not used
     #define LIBNAM  0xa6        // * not used
-    #define LIBLOC  0xa8
-    #define LIBDIC  0xaa
+    #define LIBLOC  0xa8        // * not used, have in libraries
+    #define LIBDIC  0xaa        // not used, have in libraries
 
     #define parseErrType    0x00    // for unknow unparsable error. Fall back to dump record data
+    
     typedef uint8_t (*funcPtr)(uint16_t len);
 
     uint8_t searchForParser(uint8_t val);
@@ -64,6 +65,8 @@
     uint8_t parserBLKEND(uint16_t len);
     uint8_t parserLIBHED(uint16_t len);
     uint8_t parserLIBNAM(uint16_t len);
+    uint8_t parserLIBLOC(uint16_t len);
+    uint8_t parserLIBDIC(uint16_t len);
 
     struct recordType {
         uint8_t recType;
@@ -76,7 +79,7 @@
         {RHEADR,        parserRHEADR,    "R-module Header Record"},
         {REGINT,        parserREGINT,    "Register Initialisation Record"},
         {MODEND,        parserMODEND,    "Module end Record"},
-        {THEADR,        parserTHEADR,    "Т-module Header Record"},
+        {THEADR,        parserTHEADR,    "T-module Header Record"},
         {LHEADR,        parserLHEADR,    "L-module Header Record"},
         {COMENT,        parserCOMENT,    "Comment Record"},
         {SEGDEF,        parserSEGDEF,    "Segment Definition Record"},
@@ -90,7 +93,9 @@
         {FIXUPP,        parserFIXUPP,    "Fixup Record"},
         {BLKEND,        parserBLKEND,    "Block End Record"},
         {LIBHED,        parserLIBHED,    "Library Header Record"},
-        {LIBNAM,        parserLIBNAM,    "Library Modile Names Record"}
+        {LIBNAM,        parserLIBNAM,    "Library Modile Names Record"},
+        {LIBLOC,        parserLIBLOC,    "Library Modile Locations Record"},
+        {LIBDIC,        parserLIBDIC,    "Library Dictionary Record"}
     };
     
     // Group component descriptors
