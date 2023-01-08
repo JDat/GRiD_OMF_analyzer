@@ -3,14 +3,14 @@
 
 // numerical order
     #define RHEADR  0x6e        // * used
-    #define REGINT  0x70        // * used, Partial implementation, need more coding
+    #define REGINT  0x70        // ** used, Partial implementation, need more coding
     #define REDATA  0x72        // * used
     #define RIDATA  0x74        // used
     #define OVLDEF  0x76        // used
     #define ENDREC  0x78        // used
 
     #define BLKDEF  0x7a
-    #define BLKEND  0x7c
+    #define BLKEND  0x7c        // * not used. Easy to implement
     #define DEBSYM  0x7e
 
     #define THEADR  0x80        // ** used, need some fixing
@@ -29,13 +29,13 @@
 
     #define SEGDEF  0x98        // * used, Partial implementation
     #define GRPDEF  0x9a        // * used, Partial implementation, need more coding
-    #define FIXUPP  0x9c        // used
+    #define FIXUPP  0x9c        // ** used, Partial implementation, need more coding
 
     #define R_NONE  0x9e
     #define LEDATA  0xa0        // * not used in executble. Used in font file for data
     #define LIDATA  0xa2
-    #define LIBHED  0xa4
-    #define LIBNAM  0xa6
+    #define LIBHED  0xa4        // * not used
+    #define LIBNAM  0xa6        // * not used
     #define LIBLOC  0xa8
     #define LIBDIC  0xaa
 
@@ -60,6 +60,10 @@
     uint8_t parserREDATA(uint16_t len);
     uint8_t parserEXTDEF(uint16_t len);
     uint8_t parserPUBDEF(uint16_t len);
+    uint8_t parserFIXUPP(uint16_t len);
+    uint8_t parserBLKEND(uint16_t len);
+    uint8_t parserLIBHED(uint16_t len);
+    uint8_t parserLIBNAM(uint16_t len);
 
     struct recordType {
         uint8_t recType;
@@ -82,7 +86,11 @@
         {GRPDEF,        parserGRPDEF,    "Group Definition Record"},
         {REDATA,        parserREDATA,    "Relocatable Enumerated Data Record"},
         {EXTDEF,        parserEXTDEF,    "External Names Definition Record"},
-        {PUBDEF,        parserPUBDEF,    "Public Names Definition Record"}
+        {PUBDEF,        parserPUBDEF,    "Public Names Definition Record"},
+        {FIXUPP,        parserFIXUPP,    "Fixup Record"},
+        {BLKEND,        parserBLKEND,    "Block End Record"},
+        {LIBHED,        parserLIBHED,    "Library Header Record"},
+        {LIBNAM,        parserLIBNAM,    "Library Modile Names Record"}
     };
     
     // Group component descriptors
@@ -92,16 +100,23 @@
     #define groupLTL    0xfb
     #define groupABS    0xfa
     
+    // loc component (in Fixup record) descriptors
+    #define locLoByte   0
+    #define locOffset   1
+    #define locBase     2
+    #define locPointer  3
+    #define locHiByte   4
+    
 #endif
 
 // order from OMF document
 /*
-    #define THEADR  0x80        //used
-    #define LHEADR  0x82        //used
-    #define RHEADR  0x6e        //used
+    #define THEADR  0x80
+    #define LHEADR  0x82
+    #define RHEADR  0x6e
     #define LNAMES  0x96
-    #define SEGDEF  0x98        //used
-    #define GRPDEF  0x9a        //used
+    #define SEGDEF  0x98
+    #define GRPDEF  0x9a
     #define TYPDEF  0x8e
     #define PUBDEF  0x90
     #define EXTDEF  0x8c
@@ -110,22 +125,22 @@
     #define BLKDEF  0x7a
     #define BLKEND  0x7c
     #define DEBSYM  0x7e
-    #define REDATA  0x72        //used
-    #define RIDATA  0x74        //used
-    #define PEDATA  0x84        //used
-    #define PIDATA  0x86        //used
+    #define REDATA  0x72
+    #define RIDATA  0x74
+    #define PEDATA  0x84
+    #define PIDATA  0x86
     #define LEDATA  0xa0
     #define LIDATA  0xa2
-    #define FIXUPP  0x9c        //used
-    #define OVLDEF  0x76        //used
-    #define ENDREC  0x78        //used
-    #define REGINT  0x70        //used
-    #define MODEND  0x8a        //used
+    #define FIXUPP  0x9c
+    #define OVLDEF  0x76
+    #define ENDREC  0x78
+    #define REGINT  0x70
+    #define MODEND  0x8a
     #define LIBHED  0xa4
     #define LIBNAM  0xa6
     #define LIBLOC  0xa8
     #define LIBDIC  0xaa
-    #define COMENT  0x88        //have, but not used
+    #define COMENT  0x88
 
     #define R_NONE  0x9e
 
