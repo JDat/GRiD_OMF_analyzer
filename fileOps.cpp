@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "fileOps.h"
 #include "calcXsum.h"
 
 FILE *ptrFile;
+
+char sourceFile[255];
 
 FILE *fileOpen(char *fileName){
     
@@ -16,6 +19,7 @@ FILE *fileOpen(char *fileName){
         printf("Unable to open file!\n");
         exit(-1);
     }
+    strcpy(sourceFile, fileName);
     return ptrFile;
 }
 
@@ -54,4 +58,17 @@ bool fileIsEOF() {
 
 void fileClose() {
     fclose(ptrFile);
+}
+
+bool fileWriteByte(const char *fileName, uint8_t data) {
+    FILE *ptrFileWrite;
+    ptrFileWrite = fopen(fileName,"a");
+    if (!ptrFile)
+    {
+        printf("Unable to open file: %s\n", fileName);
+        return false;
+    }
+    fwrite( &data, 1, 1, ptrFileWrite);
+    fclose(ptrFileWrite);
+    return true;
 }

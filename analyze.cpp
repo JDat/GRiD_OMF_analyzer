@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 
     fileOpen(argv[1]);
     printf("Filename:\t%s\n\n", argv[1]);
-
+    
     while (1) {
         uint8_t recType;    
         uint16_t recSize;

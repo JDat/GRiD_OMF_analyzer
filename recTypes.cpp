@@ -706,13 +706,32 @@ uint8_t parserLEDATA(uint16_t len) {
     len -=2;
     printf("Enumerated Data Offset:\t%u\t0x%04X\n", enumeratedDataOffset, enumeratedDataOffset);
     
+    char fn[255];
+    char buffer[20];
+    
+    strcpy(fn, sourceFile);
+    
+    strcat(fn,".recLEDATA.segmentIndex.");
+    sprintf(buffer, "%05d", segmentIndex);
+    strcat(fn, buffer);
+    
+    strcat(fn,".offset.");
+    sprintf(buffer, "%05d", enumeratedDataOffset);
+    strcat(fn, buffer);
+    
+    strcat(fn,".bin");
+    
+    printf("Dest File file: %s\n", fn);
+    remove(fn);
     printf("Data size:\t%u\t0x%04X\n", len, len);
     printf("Data:\t");
+    
     while (len) {
         uint8_t data;
         data = fileReadByte();
         len--;
         printf("%02X ", data);
+        fileWriteByte(fn, data);
     }
     printf("\n");
     
@@ -822,9 +841,9 @@ uint8_t parserGRPDEF(uint16_t len) {
 uint8_t parserREDATA(uint16_t len) {
     uint8_t data;
     
-    uint16_t groupIndex;
-    uint16_t segmentIndex;
-    uint16_t frameIndex;
+    uint16_t groupIndex = 0;
+    uint16_t segmentIndex = 0;
+    uint16_t frameIndex = 0;
     uint16_t dataRecordOffset;
     
     data = fileReadByte();
@@ -880,6 +899,32 @@ uint8_t parserREDATA(uint16_t len) {
     len -= 2;
     printf("Data Record Offset:\t%u\t0x%04X\n", dataRecordOffset, dataRecordOffset);
 
+    char fn[255];
+    char buffer[20];
+    
+    strcpy(fn, sourceFile);
+    strcat(fn,".recREDATA.groupIndex.");
+    sprintf(buffer, "%d", groupIndex);
+    strcat(fn, buffer);
+    
+    strcat(fn,".segmentIndex.");
+    sprintf(buffer, "%05d", segmentIndex);
+    strcat(fn, buffer);
+
+    strcat(fn,".frameIndex.");
+    sprintf(buffer, "%05d", frameIndex);
+    strcat(fn, buffer);
+
+    strcat(fn,".offset.");
+    sprintf(buffer, "%05d", dataRecordOffset);
+    strcat(fn, buffer);
+    
+    strcat(fn,".bin");
+    
+    printf("Dest File file: %s\n", fn);
+    remove(fn);
+
+
     printf("Data size:\t%u\t0x%04X\n", len, len);
     printf("Data:\t");
     while (len) {
@@ -887,6 +932,7 @@ uint8_t parserREDATA(uint16_t len) {
         data = fileReadByte();
         len--;
         printf("%02X ", data);
+        fileWriteByte(fn, data);
     }
     printf("\n");
     
