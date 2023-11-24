@@ -42,6 +42,9 @@
     #define LIBLOC  0xa8        // * not used, have in libraries
     #define LIBDIC  0xaa        // * not used, have in libraries
 
+    // Not Related to Intel OMF
+    #define GRiDspecific1   0xfd    // Specific, used by GRiD
+    #define GRiDspecific2   0xfe    // Specific, used by GRiD
     #define parseErrType    0x00    // for unknow unparsable error. Fall back to dump record data
     
     uint8_t searchForParser(uint8_t val);    
@@ -70,6 +73,10 @@
     uint8_t parserLIBDIC(uint16_t len);
     uint8_t parserENDREC(uint16_t len);
     uint8_t parserPEDATA(uint16_t len);
+    
+    uint8_t parserGRiDspecific1(uint16_t len);
+    uint8_t parserGRiDspecific2(uint16_t len);
+    
     
     
     typedef uint8_t (*funcPtr)(uint16_t len);
@@ -103,7 +110,10 @@
         {LIBLOC,        parserLIBLOC,    "Library Modile Locations Record"},
         {LIBDIC,        parserLIBDIC,    "Library Dictionary Record"},
         {ENDREC,        parserENDREC,    "End Record"},
-        {PEDATA,        parserPEDATA,    "End Record"}
+        {PEDATA,        parserPEDATA,    "Physical Enumerated Data Record"},
+        
+        {GRiDspecific1, parserGRiDspecific1,    "GRiD specific Record 0xFD"},
+        {GRiDspecific2, parserGRiDspecific2,    "GRiD specific Record 0xFE"}
     };
     
     // Group component descriptors

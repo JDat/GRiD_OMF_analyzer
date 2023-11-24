@@ -39,21 +39,26 @@ int main(int argc, char *argv[])
 
 
         recSize = fileReadWord();
-        printf("Size:\t%u\t0x%02X\n", recSize, recSize);
+        printf("Size:\t%u\t0x%04X\n", recSize, recSize);
 
         uint8_t j = searchForParser(recType);
         recordTypes[j].parseFn(recSize - 1);
+        
+        if ( (recType != GRiDspecific1) && (recType != GRiDspecific2) ) {      // Do not calculate Checksum for GRiD specific records
+            xSum = calcXsumResult();
+            xSumRead = fileReadByte();
+            printf("xSum:\t0x%02X", xSumRead);
 
-        xSum = calcXsumResult();
-        xSumRead = fileReadByte();
-        printf("xSum:\t0x%02X", xSumRead);
-        if (xSumRead == xSum) {
-            printf(" (OK)\n\n");
-        } else {
-            printf("\nError: Wrong Checksum! Calculated: 0x%02X\n", xSum);
-            fileClose();
-            return -1;
+
+            if (xSumRead == xSum) {
+                printf(" (OK)\n");
+            } else {
+                printf("\nError: Wrong Checksum! Calculated: 0x%02X", xSum);
+                fileClose();
+                return -1;
+            }
         }
+        printf("\n");
     }
 
     fileClose();

@@ -1243,3 +1243,29 @@ uint8_t parserPEDATA(uint16_t len) {
     
     return 0;
 }
+
+uint8_t parserGRiDspecific1(uint16_t len) {
+    printf("Data:\t");
+    while (len) {
+        uint8_t data;
+        data = fileReadByte();
+        len--;
+        printf("%02X ", data);
+    }
+    printf("%02X ", fileReadByte());
+    printf("\n");
+    return 0;
+}
+
+uint8_t parserGRiDspecific2(uint16_t len) {
+    printf("Data:\t");
+    while (len) {
+        uint8_t data;
+        data = fileReadByte();
+        len--;
+        printf("%02X ", data);
+    }
+    printf("%02X ", fileReadByte());
+    printf("\n");
+    return 0;
+}
