@@ -6,6 +6,42 @@
 #include "recTypes.h"
 #include "fileOps.h"
 
+////////////////////////////////////////////////////////////////////////
+// Local helper function
+bool isPrintable(uint8_t data) {
+    if ( (data >= 0x20) && (data < 0x7f) ) { 
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/*
+ * Idea taken from LDRBFRP.PLM
+ * Lines 315 - 338
+ */
+uint16_t getIndex(uint16_t* len) {
+    uint8_t data;
+    uint16_t index;
+    uint16_t localLen;
+    localLen = *len;
+    data = fileReadByte();
+    localLen--;
+    if (data > 127) {
+        index = (data & 0x7F) << 8;
+        data = fileReadByte();
+        localLen--;
+        index += data;
+    } else {
+        index = data;
+    }
+    *len = localLen;
+    return index;
+}
+////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////
+// Main functions for parser
 uint8_t searchForParser(uint8_t val){
 
     for (unsigned long i = 0; i < sizeof(recordTypes)/sizeof(recordType); i++) {
@@ -29,6 +65,7 @@ uint8_t parserErr(uint16_t len) {
     printf("\n");
     return 0;
 }
+////////////////////////////////////////////////////////////////////////
 
 uint8_t parserRHEADR(uint16_t len) {
     uint8_t nameLen;
@@ -96,8 +133,15 @@ uint8_t parserRHEADR(uint16_t len) {
     return 0;
 };
 
+/*
+ * How this works?
+ * Original function in file LDRBFRP.PLM
+ * Lines 340 - 393
+ * Original function in file LOADER.PLM
+ * Lines 165 - 214
+
+ */
 uint8_t parserREGINT(uint16_t len) {
-    uint8_t data;
 
     uint8_t regPair;    
     uint8_t regType;
@@ -106,7 +150,7 @@ uint8_t parserREGINT(uint16_t len) {
     uint16_t frameIndex;
     uint16_t registerOffset;
 
-    uint16_t entryCount;
+    uint16_t entryCount = 0;
     
     while(len) {
         printf("\n");
@@ -115,7 +159,7 @@ uint8_t parserREGINT(uint16_t len) {
         regType  = fileReadByte();
         len--; 
         
-        printf("Regyster type (RAW):\t0x%02X\n", regType);
+        printf("Register type (RAW):\t0x%02X\n", regType);
 
 
         regPair = (regType & 0b11000000) >> 6;
@@ -153,28 +197,9 @@ uint8_t parserREGINT(uint16_t len) {
             }
         } else {
             printf("Init registers as base:offset pair (L=0)\n");
-                    
-            data = fileReadByte();
-            len--;
-            if (data > 127) {
-                groupIndex = (data & 0x7F) << 8;
-                data = fileReadByte();
-                len--;
-                groupIndex += data;
-            } else {
-                groupIndex = data;
-            }
             
-            data = fileReadByte();
-            len--;
-            if (data > 127) {
-                segmentIndex = (data & 0x7F) << 8;
-                data = fileReadByte();
-                len--;
-                segmentIndex += data;
-            } else {
-                segmentIndex = data;
-            }
+            groupIndex = getIndex(&len);
+            segmentIndex = getIndex(&len);
             
             printf("Group Index:\t%u\t0x%04X\n", groupIndex, groupIndex);
             printf("Segment Index:\t%u\t0x%04X\n", segmentIndex, segmentIndex);
@@ -189,16 +214,7 @@ uint8_t parserREGINT(uint16_t len) {
                 if (segmentIndex) {
                     //noframeIndex, normal
                 } else {
-                    data = fileReadByte();
-                    len--;
-                    if (data > 127) {
-                        frameIndex = data & 0x7F << 8;
-                        data = fileReadByte();
-                        len--;
-                        frameIndex += data;
-                    } else {
-                        frameIndex = data;
-                    }
+                    frameIndex = getIndex(&len);
                     printf("Frame Index:\t%u\t0x%04X\n", frameIndex, frameIndex);
                 }
             }
@@ -286,24 +302,6 @@ uint8_t parserTHEADR(uint16_t len) {
             printf("%c", data);
         }
         
-        /*
-        for (uint8_t i = 0; i < (len ); i++) {
-            data = fileReadByte();
-            
-            if (data > 1 && printCount == 0) {
-                printCount = data + 1 ;
-                printf("\nASCII data %u chars len:  ", data);
-            }
-
-            if (printCount > 0 ) {
-                printf("%c", data);
-                printCount--;
-            } else {
-                printf("%02X ", data);
-            }
-
-        }
-        */
         printf("\n");
     //}
     return 0;
@@ -311,48 +309,21 @@ uint8_t parserTHEADR(uint16_t len) {
 
 uint8_t parserLHEADR(uint16_t len) {
     uint8_t nameLen;
-    //uint8_t printCount = 0;
     uint8_t data;
     
     nameLen = fileReadByte();
-    //if ( (nameLen > 0) && (nameLen <= 40) ) {
-        printf("Module name:\t");
-        
-        for (uint8_t i = 0; i < nameLen; i++) {
-            data = fileReadByte();
-            printf("%c", data);
-        }
-        
-        /*
-        for (uint8_t i = 0; i < (len ); i++) {
-            data = fileReadByte();
-            
-            if (data > 1 && printCount == 0) {
-                printCount = data + 1 ;
-                printf("\nASCII data %u chars len:  ", data);
-            }
+    printf("Module name:\t");
+    
+    for (uint8_t i = 0; i < nameLen; i++) {
+        data = fileReadByte();
+        printf("%c", data);
+    }
+    
+    printf("\n");
 
-            if (printCount > 0 ) {
-                printf("%c", data);
-                printCount--;
-            } else {
-                printf("%02X ", data);
-            }
-
-        }
-        */
-        printf("\n");
-    //}
     return 0;
 }
 
-bool isPrintable(uint8_t data) {
-    if ( (data >= 0x20) && (data < 0x7f) ) { 
-        return true;
-    } else {
-        return false;
-    }
-}
 uint8_t parserCOMENT(uint16_t len) {
     uint8_t data;
     uint8_t oldData = 0;
@@ -411,7 +382,7 @@ uint8_t parserSEGDEF(uint16_t len) {
     uint16_t overlayNameIndex;
     
     uint16_t frameNumber;
-    uint8_t offset;
+    uint8_t offset = 0;
     
     bool flagBig;
     bool flagPageResident;
@@ -442,38 +413,9 @@ uint8_t parserSEGDEF(uint16_t len) {
             segLen = fileReadWord();
             len -= 2;
             
-            data = fileReadByte();
-            len--;
-            if (data > 127) {
-                segmentNameIndex = (data & 0x7F) << 8;
-                data = fileReadByte();
-                len--;
-                segmentNameIndex += data;
-            } else {
-                segmentNameIndex = data;
-            }
-
-            data = fileReadByte();
-            len--;
-            if (data > 127) {
-                groupNameIndex = (data & 0x7F) << 8;
-                data = fileReadByte();
-                len--;
-                groupNameIndex += data;
-            } else {
-                groupNameIndex = data;
-            }
-
-            data = fileReadByte();
-            len--;
-            if (data > 127) {
-                overlayNameIndex = (data & 0x7F) << 8;
-                data = fileReadByte();
-                len--;
-                overlayNameIndex += data;
-            } else {
-                overlayNameIndex = data;
-            }
+            segmentNameIndex = getIndex(&len);
+            groupNameIndex = getIndex(&len);
+            overlayNameIndex = getIndex(&len);
             break;
         case 3:
             printf("SEGDEF describes a relocatable, paragraph aligned LSEG\n");
@@ -486,12 +428,6 @@ uint8_t parserSEGDEF(uint16_t len) {
         case 5:
             printf("SEGDEF describes an unnamed absolute portion of memory\n");
             frameNumber = fileReadWord();
-            offset = fileReadByte();
-            ltlData = fileReadByte();
-            len -= 4;
-            flagGroup = ltlData & 0b10000000 ? true : false;
-            flagBSM = ltlData & 0b00000001 ? true : false;
-            maxSegLen = fileReadWord();
             len -= 2;
             break;
         case 6:
@@ -500,7 +436,6 @@ uint8_t parserSEGDEF(uint16_t len) {
             len--;
             flagGroup = ltlData & 0b10000000 ? true : false;
             flagBSM = ltlData & 0b00000001 ? true : false;
-            //maxSegLen = fileReadWord();
             if (flagBSM) {
                 maxSegLen = fileReadByte();
                 len--;
@@ -513,39 +448,9 @@ uint8_t parserSEGDEF(uint16_t len) {
             segLen = fileReadWord();
             len -= 2;
 
-            data = fileReadByte();
-            len--;
-            if (data > 127) {
-                segmentNameIndex = (data & 0x7F) << 8;
-                data = fileReadByte();
-                len--;
-                segmentNameIndex += data;
-            } else {
-                segmentNameIndex = data;
-            }
-
-            data = fileReadByte();
-            len--;
-            if (data > 127) {
-                groupNameIndex = (data & 0x7F) << 8;
-                data = fileReadByte();
-                len--;
-                groupNameIndex += data;
-            } else {
-                groupNameIndex = data;
-            }
-
-            data = fileReadByte();
-            len--;
-            if (data > 127) {
-                overlayNameIndex = (data & 0x7F) << 8;
-                data = fileReadByte();
-                len--;
-                overlayNameIndex += data;
-            } else {
-                overlayNameIndex = data;
-            }
-
+            segmentNameIndex = getIndex(&len);
+            groupNameIndex = getIndex(&len);
+            overlayNameIndex = getIndex(&len);
             break;
         default:
             printf("Error: Other/Unknown Aligment:\t%u\n", aligment);
@@ -568,19 +473,7 @@ uint8_t parserSEGDEF(uint16_t len) {
 
     }
     
-    if (aligment == 5 ) {
-        printf("LTL Data (RAW): 0x%02X\n", ltlData);
-        if (flagGroup) {
-            printf("Flag: GROUP. Segment is part of group and should be loaded as part of the group\n");
-        }
-        if (flagBSM) {
-            printf("Flag: BSM. Maximum segment length is 65536. MAXIMUM SEGMENT LENGTH must be 0\n");
-        }
-        printf("Max Segment Length:\t %u\t0x%04X\n", maxSegLen, maxSegLen);
-        if (flagBSM && maxSegLen != 0) {
-            printf("Warining: Flag: BSM is set. Max Segment Length MUST BE 0\n");
-        }
-        
+    if (aligment == 5 ) {        
         printf("Frame number:\t%u\t0x%04X\n", frameNumber, frameNumber);
         printf("Offset:\t%u\n", offset);
     }
@@ -609,13 +502,11 @@ uint8_t parserSEGDEF(uint16_t len) {
 
     }
     
-    
     if (len) {
         printf("Data: ");
         while (len) {
             data = fileReadByte();
             len--;
-            //printf("%c", data);
             printf("%02X ", data);
         }
         printf("\n");
@@ -628,9 +519,7 @@ uint8_t parserLNAMES(uint16_t len) {
     uint16_t i = 0;
     uint8_t data;
     uint8_t strLen = 0;
-    uint8_t entryCount = 0;
-    
-    //char tmpStr[40];
+    uint8_t entryCount = 1;
     
     while (i < len) {
         i++;
@@ -651,8 +540,6 @@ uint8_t parserLNAMES(uint16_t len) {
             printf("%c", data);
         }
         printf("\n");
-        //printf("tmpStr: %s\n", tmpStr);
-        
     }
     
     printf("Entry count: %u\n", entryCount);
@@ -687,20 +574,10 @@ uint8_t parserTYPDEF(uint16_t len) {
 }
 
 uint8_t parserLEDATA(uint16_t len) {
-    uint8_t data;
     uint16_t segmentIndex;
     uint16_t enumeratedDataOffset;
     
-    data = fileReadByte();
-    len--;
-    if (data > 127) {
-        segmentIndex = (data & 0x7F) << 8;
-        data = fileReadByte();
-        len--;
-        segmentIndex += data;
-    } else {
-        segmentIndex = data;
-    }
+    segmentIndex = getIndex(&len);
     printf("Segment index:\t%u\t0x%04X\n", segmentIndex, segmentIndex);
     enumeratedDataOffset = fileReadWord();
     len -=2;
@@ -721,7 +598,7 @@ uint8_t parserLEDATA(uint16_t len) {
     
     strcat(fn,".bin");
     
-    printf("Dest File file: %s\n", fn);
+    printf("Dest. File: %s\n", fn);
     remove(fn);
     printf("Data size:\t%u\t0x%04X\n", len, len);
     printf("Data:\t");
@@ -746,16 +623,7 @@ uint8_t parserGRPDEF(uint16_t len) {
     
     uint16_t entryCount = 0;
     
-    data = fileReadByte();
-    len--;
-    if (data > 127) {
-        groupNameIndex = (data & 0x7F) << 8;
-        data = fileReadByte();
-        len--;
-        groupNameIndex += data;
-    } else {
-        groupNameIndex = data;
-    }
+    groupNameIndex = getIndex(&len);
     printf("Group Name Index:\t%u\t0x%04X\n", groupNameIndex, groupNameIndex);
     
     while (len) {
@@ -765,16 +633,7 @@ uint8_t parserGRPDEF(uint16_t len) {
         entryCount++;
         switch (groupComponentDescriptor) {
             case groupSI:
-                data = fileReadByte();
-                len--;
-                if (data > 127) {
-                    segmentIndex = (data & 0x7F) << 8;
-                    data = fileReadByte();
-                    len--;
-                    segmentIndex += data;
-                } else {
-                    segmentIndex = data;
-                }
+                segmentIndex = getIndex(&len);
                 printf("Group Component Descriptor Field For Segment Index:\t0x%04X\n", segmentIndex);
                 break;
 /*
@@ -839,34 +698,14 @@ uint8_t parserGRPDEF(uint16_t len) {
 }
 
 uint8_t parserREDATA(uint16_t len) {
-    uint8_t data;
     
     uint16_t groupIndex = 0;
     uint16_t segmentIndex = 0;
     uint16_t frameIndex = 0;
     uint16_t dataRecordOffset;
     
-    data = fileReadByte();
-    len--;
-    if (data > 127) {
-        groupIndex = (data & 0x7F) << 8;
-        data = fileReadByte();
-        len--;
-        groupIndex += data;
-    } else {
-        groupIndex = data;
-    }
-    
-    data = fileReadByte();
-    len--;
-    if (data > 127) {
-        segmentIndex = (data & 0x7F) << 8;
-        data = fileReadByte();
-        len--;
-        segmentIndex += data;
-    } else {
-        segmentIndex = data;
-    }
+    groupIndex = getIndex(&len);
+    segmentIndex = getIndex(&len);
     
     printf("Group Index:\t%u\t0x%04X\n", groupIndex, groupIndex);
     printf("Segment Index:\t%u\t0x%04X\n", segmentIndex, segmentIndex);
@@ -881,16 +720,7 @@ uint8_t parserREDATA(uint16_t len) {
         if (segmentIndex) {
             //noframeIndex, normal
         } else {
-            data = fileReadByte();
-            len--;
-            if (data > 127) {
-                frameIndex = (data & 0x7F) << 8;
-                data = fileReadByte();
-                len--;
-                frameIndex += data;
-            } else {
-                frameIndex = data;
-            }
+            frameIndex = getIndex(&len);
             printf("Frame Index:\t%u\t0x%04X\n", frameIndex, frameIndex);
         }
     }
@@ -921,7 +751,7 @@ uint8_t parserREDATA(uint16_t len) {
     
     strcat(fn,".bin");
     
-    printf("Dest File file: %s\n", fn);
+    printf("Dest. File: %s\n", fn);
     remove(fn);
 
 
@@ -946,8 +776,6 @@ uint8_t parserEXTDEF(uint16_t len) {
     uint8_t entryCount = 0;
     uint16_t typeIndex;
     
-    //char tmpStr[40];
-    
     while (i < len) {
         i++;
         data = fileReadByte();
@@ -970,7 +798,6 @@ uint8_t parserEXTDEF(uint16_t len) {
         typeIndex = fileReadByte();
         printf("Type index: 0x%02X\n", typeIndex);
         i++;
-        //printf("tmpStr: %s\n", tmpStr);
         
     }
     
@@ -981,38 +808,18 @@ uint8_t parserEXTDEF(uint16_t len) {
 uint8_t parserPUBDEF(uint16_t len) {
     uint8_t data;
     uint8_t strLen;
-    //uint8_t printCount = 0;
     
     uint16_t groupIndex;
-    //uint8_t groupComponentDescriptor;
     uint16_t segmentIndex;
     uint16_t frameNumber;
     uint16_t offset;
     
     uint16_t entryCount = 0;
     
-    data = fileReadByte();
-    len--;
-    if (data > 127) {
-        groupIndex = (data & 0x7F) << 8;
-        data = fileReadByte();
-        len--;
-        groupIndex += data;
-    } else {
-        groupIndex = data;
-    }
+    groupIndex = getIndex(&len);
     printf("Group Index:\t%u\t0x%04X\n", groupIndex, groupIndex);
     
-    data = fileReadByte();
-    len--;
-    if (data > 127) {
-        segmentIndex = (data & 0x7F) << 8;
-        data = fileReadByte();
-        len--;
-        segmentIndex += data;
-    } else {
-        segmentIndex = data;
-    }
+    segmentIndex = getIndex(&len);
     printf("Segment Index:\t0x%04X\n", segmentIndex);
     
     if (groupIndex == 0 && segmentIndex == 0 ) {
@@ -1060,6 +867,11 @@ uint8_t parserPUBDEF(uint16_t len) {
     return 0;
 }
 
+/*
+ * How this works?
+ * Original function in file SYSLDTA.PLM
+ * Lines 97 - 414
+ */
 uint8_t parserFIXUPP(uint16_t len) {
     uint8_t data;
     uint16_t entryCount = 0;
@@ -1181,30 +993,12 @@ uint8_t parserFIXUPP(uint16_t len) {
             }
             
             if (f) {
-                data = fileReadByte();
-                len--;
-                if (data > 127) {
-                    frameDatum = data << 8;
-                    data = fileReadByte();
-                    len--;
-                    frameDatum += data;
-                } else {
-                    frameDatum = data;
-                }
+                frameDatum = getIndex(&len);
                 printf("Frame Datum:\t%u\t0x%04X\n", frameDatum, frameDatum);            
             }
             
             if (!t) {
-                data = fileReadByte();
-                len--;
-                if (data > 127) {
-                    targetDatum = data << 8;
-                    data = fileReadByte();
-                    len--;
-                    targetDatum += data;
-                } else {
-                    targetDatum = data;
-                }
+                targetDatum = getIndex(&len);
                 printf("Target Datum:\t%u\t0x%04X\n", targetDatum, targetDatum);            
             }
             
@@ -1216,6 +1010,7 @@ uint8_t parserFIXUPP(uint16_t len) {
                     data = fileReadByte();
                     len--;
                     targetDisplacement += data << 8;
+                    data = fileReadByte();          // Maybe BUG.
                     len--;
                     targetDisplacement += data;
                 } else {
@@ -1300,9 +1095,7 @@ uint8_t parserLIBNAM(uint16_t len) {
     uint16_t i = 0;
     uint8_t data;
     uint8_t strLen = 0;
-    uint8_t entryCount = 0;
-    
-    //char tmpStr[40];
+    uint8_t entryCount = 1;
     
     while (i < len) {
         i++;
@@ -1323,7 +1116,6 @@ uint8_t parserLIBNAM(uint16_t len) {
             printf("%c", data);
         }
         printf("\n");
-        //printf("tmpStr: %s\n", tmpStr);
         
     }
     
@@ -1354,8 +1146,6 @@ uint8_t parserLIBDIC(uint16_t len) {
     uint8_t strLen = 0;
     uint8_t entryCount = 0;
     
-    //char tmpStr[40];
-    
     while (i < len) {
         i++;
         data = fileReadByte();
@@ -1375,11 +1165,81 @@ uint8_t parserLIBDIC(uint16_t len) {
             printf("%c", data);
         }
         printf("\n");
-        //printf("tmpStr: %s\n", tmpStr);
-        
     }
     
     printf("Entry count: %u\n", entryCount);
+    
+    return 0;
+}
+
+uint8_t parserENDREC(uint16_t len) {
+    uint8_t data;
+    data = fileReadByte();
+    printf("RAW End type:\t%u\t0x%02X\n", data, data);
+    switch (data) {
+        case 0:
+            printf("End type:\t0\tEnd of overlay\n");
+            break;
+        case 1:
+            printf("End type:\t1\tEnd of block\n");
+            break;
+        case 2:
+            printf("End type:\t2\tWarning: Illegal\n");
+            break;
+        case 3:
+            printf("End type:\t3\tWarning: Illegal\n");
+            break;
+        default:
+            printf("Warning: Very Illegal!\n");
+            break;
+
+    }
+    return 0;
+}
+
+uint8_t parserPEDATA(uint16_t len) {
+    uint16_t frameNumber;
+    uint8_t offset;
+    
+    
+    frameNumber = fileReadWord();
+    len -=2;
+    printf("Frame Number:\t%u\t0x%04X\n", frameNumber, frameNumber);
+    
+    offset = fileReadByte();
+    len--;
+    printf("Offset:\t%u\t0x%02X\n", offset, offset);
+    
+    
+        
+    char fn[255];
+    char buffer[20];
+    
+    strcpy(fn, sourceFile);
+    
+    strcat(fn,".recPEDATA.frameNumber.");
+    sprintf(buffer, "%05d", frameNumber);
+    strcat(fn, buffer);
+    
+    strcat(fn,".offset.");
+    sprintf(buffer, "%05d", offset);
+    strcat(fn, buffer);
+    
+    strcat(fn,".bin");
+    
+    printf("Dest. File: %s\n", fn);
+    remove(fn);
+    printf("Data size:\t%u\t0x%04X\n", len, len);
+    printf("Data:\t");
+    
+    while (len) {
+        uint8_t data;
+        data = fileReadByte();
+        len--;
+        printf("%02X ", data);
+        fileWriteByte(fn, data);
+    }
+    printf("\n");
     
     return 0;
 }

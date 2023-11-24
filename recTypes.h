@@ -1,13 +1,16 @@
 #ifndef _rectypes_h
 #define _rectypes_h
 
-// numerical order
+// (empty) - not implemented yet for some reason
+//      *  - implemented, kinda working, small chance that it have bugs, need double checking
+//     ** - partially implemented, need more checking/coding
+// numerical order from OMF document. See page 88 (PDF page 90).
     #define RHEADR  0x6e        // * used
     #define REGINT  0x70        // ** used, Partial implementation, need more coding
     #define REDATA  0x72        // * used
     #define RIDATA  0x74        // used
     #define OVLDEF  0x76        // used
-    #define ENDREC  0x78        // used
+    #define ENDREC  0x78        // * used
 
     #define BLKDEF  0x7a
     #define BLKEND  0x7c        // * not used. Easy to implement
@@ -15,7 +18,7 @@
 
     #define THEADR  0x80        // ** used, need some fixing
     #define LHEADR  0x82        // ** used, need some fixing
-    #define PEDATA  0x84        // used
+    #define PEDATA  0x84        // * used
     #define PIDATA  0x86        // used
     #define COMENT  0x88        // ** not used, present in some files, need some fixing
     #define MODEND  0x8a        // ** used, Partial implementation, need more coding
@@ -23,30 +26,28 @@
     #define EXTDEF  0x8c        // * not used, present in some files
     #define TYPDEF  0x8e        // * not used, present in font file
     #define PUBDEF  0x90        // ** not used, present in some files, Partial implementation, need more coding
-    #define LOCSYM  0x92
-    #define LINNUM  0x94
+    #define LOCSYM  0x92        //
+    #define LINNUM  0x94        //
     #define LNAMES  0x96        // ** not used, need some fixing
 
     #define SEGDEF  0x98        // ** used, Partial implementation
     #define GRPDEF  0x9a        // ** used, Partial implementation, need more coding
     #define FIXUPP  0x9c        // ** used, Partial implementation, need more coding
 
-    #define R_NONE  0x9e
+    #define R_NONE  0x9e        // no info about this record
     #define LEDATA  0xa0        // * not used in executble. Used in font file for data
-    #define LIDATA  0xa2
+    #define LIDATA  0xa2        // not used
     #define LIBHED  0xa4        // * not used
     #define LIBNAM  0xa6        // * not used
     #define LIBLOC  0xa8        // * not used, have in libraries
-    #define LIBDIC  0xaa        // not used, have in libraries
+    #define LIBDIC  0xaa        // * not used, have in libraries
 
     #define parseErrType    0x00    // for unknow unparsable error. Fall back to dump record data
     
-    typedef uint8_t (*funcPtr)(uint16_t len);
-
-    uint8_t searchForParser(uint8_t val);
-    
+    uint8_t searchForParser(uint8_t val);    
     uint8_t parserErr(uint16_t len);
     
+    // In order of implementation
     uint8_t parserRHEADR(uint16_t len);
     uint8_t parserREGINT(uint16_t len);
     uint8_t parserMODEND(uint16_t len);
@@ -67,7 +68,12 @@
     uint8_t parserLIBNAM(uint16_t len);
     uint8_t parserLIBLOC(uint16_t len);
     uint8_t parserLIBDIC(uint16_t len);
-
+    uint8_t parserENDREC(uint16_t len);
+    uint8_t parserPEDATA(uint16_t len);
+    
+    
+    typedef uint8_t (*funcPtr)(uint16_t len);
+    
     struct recordType {
         uint8_t recType;
         funcPtr parseFn;
@@ -95,7 +101,9 @@
         {LIBHED,        parserLIBHED,    "Library Header Record"},
         {LIBNAM,        parserLIBNAM,    "Library Modile Names Record"},
         {LIBLOC,        parserLIBLOC,    "Library Modile Locations Record"},
-        {LIBDIC,        parserLIBDIC,    "Library Dictionary Record"}
+        {LIBDIC,        parserLIBDIC,    "Library Dictionary Record"},
+        {ENDREC,        parserENDREC,    "End Record"},
+        {PEDATA,        parserPEDATA,    "End Record"}
     };
     
     // Group component descriptors
@@ -114,7 +122,7 @@
     
 #endif
 
-// order from OMF document
+// order from OMF document by pages
 /*
     #define THEADR  0x80
     #define LHEADR  0x82
