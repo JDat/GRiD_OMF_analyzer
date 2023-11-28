@@ -1269,3 +1269,53 @@ uint8_t parserGRiDspecific2(uint16_t len) {
     printf("\n");
     return 0;
 }
+
+uint8_t parserOVLDEF(uint16_t len) {
+    uint8_t nameLen;
+    uint8_t data;
+    nameLen = fileReadByte();
+    len--;
+    if ( (nameLen > 0) && (nameLen <= 40) ) {
+        printf("Name name:\t");
+        for (uint8_t i = 0; i < nameLen; i++) {
+            data = fileReadByte();
+            printf("%c", data);
+        }
+        printf("\n");
+    }
+    
+    uint32_t overlayLocation;
+    overlayLocation = fileReadLong();
+    len -=4;
+    printf("Overlay Location:\t%u\t0x%08X\n", overlayLocation, overlayLocation);
+    
+    uint8_t overlayAttr;
+    overlayAttr = fileReadByte();
+    len--;
+    printf("Overlay Attribute (RAW):\t%u\t0x%02X\n", overlayAttr, overlayAttr);
+
+    bool overlaySfield;
+    bool overlayAfield;
+    overlaySfield = (overlayAttr & 0b00000010) >> 1;
+    overlayAfield = overlayAttr & 0b00000001;
+
+    if (overlaySfield) {
+        printf("Overlay shared bit is set");
+        uint16_t overlaySharedIndex;
+        overlaySharedIndex = getIndex(&len);
+        printf("Shared overlay index:\t%u\t%0x04X\n", overlaySharedIndex, overlaySharedIndex);
+    }
+    
+    if (overlayAfield) {
+        printf("Overlay adjacent bit is set");
+        uint16_t overlayAdjacentIndex;
+        overlayAdjacentIndex = getIndex(&len);
+        printf("Adjacent overlay index:\t%u\t%0x04X\n", overlayAdjacentIndex, overlayAdjacentIndex);
+    }
+    
+    return 0;
+}
+
+//groupIndex = getIndex(&len);
+//    printf("Group Index:\t%u\t0x%04X\n", groupIndex, groupIndex);
+    

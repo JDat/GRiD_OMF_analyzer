@@ -12,9 +12,9 @@
     #define OVLDEF  0x76        // used
     #define ENDREC  0x78        // * used
 
-    #define BLKDEF  0x7a
+    #define BLKDEF  0x7a        // 
     #define BLKEND  0x7c        // * not used. Easy to implement
-    #define DEBSYM  0x7e
+    #define DEBSYM  0x7e        // 
 
     #define THEADR  0x80        // ** used, need some fixing
     #define LHEADR  0x82        // ** used, need some fixing
@@ -77,6 +77,7 @@
     uint8_t parserGRiDspecific1(uint16_t len);
     uint8_t parserGRiDspecific2(uint16_t len);
     
+    uint8_t parserOVLDEF(uint16_t len);
     
     
     typedef uint8_t (*funcPtr)(uint16_t len);
@@ -113,7 +114,9 @@
         {PEDATA,        parserPEDATA,    "Physical Enumerated Data Record"},
         
         {GRiDspecific1, parserGRiDspecific1,    "GRiD specific Record 0xFD"},
-        {GRiDspecific2, parserGRiDspecific2,    "GRiD specific Record 0xFE"}
+        {GRiDspecific2, parserGRiDspecific2,    "GRiD specific Record 0xFE"},
+        {OVLDEF,        parserOVLDEF,    "Overlay Definition Record"}
+        
     };
     
     // Group component descriptors

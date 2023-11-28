@@ -1,0 +1,43 @@
+Filename:	LTIME.TXT
+
+
+Offset:	0x00000
+Type:	0xFE
+Size:	4	0x0004
+Record description:	GRiD specific Record 0xFE
+Data:	61 8B 52 00 
+
+
+Offset:	0x00007
+Type:	0xFE
+Size:	4	0x0004
+Record description:	GRiD specific Record 0xFE
+Data:	77 01 00 54 
+
+
+Offset:	0x0000E
+Type:	0xFE
+Size:	11	0x000B
+Record description:	GRiD specific Record 0xFE
+Data:	6D 0F 50 05 39 01 00 00 00 00 00 
+
+
+Offset:	0x0001C
+Type:	0xFE
+Size:	1	0x0001
+Record description:	GRiD specific Record 0xFE
+Data:	68 
+
+
+Offset:	0x00020
+Type:	0xFD
+Size:	9	0x0009
+Record description:	GRiD specific Record 0xFD
+Data:	6F 00 01 00 00 00 01 01 00 
+
+
+Offset:	0x0002C
+Type:	0xFE
+Size:	12	0x000C
+Record description:	GRiD specific Record 0xFE
+Data:	6E 53 79 73 74 65 6D 2D 77 69 64 65 
