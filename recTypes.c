@@ -44,7 +44,7 @@ uint16_t getIndex(uint16_t* len) {
 // Main functions for parser
 uint8_t searchForParser(uint8_t val){
 
-    for (unsigned long i = 0; i < sizeof(recordTypes)/sizeof(recordType); i++) {
+    for (unsigned long i = 0; i < sizeof(recordTypes)/sizeof(struct recordType); i++) {
         if ( recordTypes[i].recType == val ) {
             printf("Record description:\t%s\n", recordTypes[i].recordName);
             return (uint8_t)i;
@@ -964,9 +964,9 @@ uint8_t parserFIXUPP(uint16_t len) {
             
             
             if (f) {
-                printf("Flag: f: is set.\tFrame specified explicitly\n");
-            } else {
                 printf("Flag: f: is clear.\tFrame specified by thread\n");
+            } else {
+                printf("Flag: f: is set.\tFrame specified explicitly\n");
             }
             printf("Frame:\t%u\n", frame);
             if (t) {

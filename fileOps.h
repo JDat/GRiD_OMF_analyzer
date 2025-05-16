@@ -1,6 +1,8 @@
 #ifndef _fileOps_h
 #define _fileOps_h
 
+    #include <stdbool.h>
+    
     extern char sourceFile[255];
     FILE *fileOpen(char *fileName);
     uint8_t fileReadByte();

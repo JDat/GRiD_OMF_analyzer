@@ -7,10 +7,9 @@
 #include "fileOps.h"
 #include "calcXsum.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
-    if (argc != 2 or strlen(argv[1]) == 0 ) {
+    if (argc != 2 || strlen(argv[1]) == 0 ) {
         printf("Provide filename for analyze:\n");
         printf("./analyze FILENAME.RUN\n");
         exit(-1);

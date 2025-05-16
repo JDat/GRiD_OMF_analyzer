@@ -9,7 +9,7 @@
     #define REGINT  0x70        // ** used, Partial implementation, need more coding
     #define REDATA  0x72        // * used
     #define RIDATA  0x74        // used
-    #define OVLDEF  0x76        // used
+    #define OVLDEF  0x76        // * used
     #define ENDREC  0x78        // * used
 
     #define BLKDEF  0x7a        // 
@@ -47,7 +47,7 @@
     #define GRiDspecific2   0xfe    // Specific, used by GRiD
     #define parseErrType    0x00    // for unknow unparsable error. Fall back to dump record data
     
-    uint8_t searchForParser(uint8_t val);    
+    uint8_t searchForParser(uint8_t val);
     uint8_t parserErr(uint16_t len);
     
     // In order of implementation
@@ -88,7 +88,7 @@
         const char *recordName;
     };
 
-    const struct recordType recordTypes[] = {
+    static const struct recordType recordTypes[] = {
         {parseErrType,  parserErr,       "Record type not supported"},
         {RHEADR,        parserRHEADR,    "R-module Header Record"},
         {REGINT,        parserREGINT,    "Register Initialisation Record"},
